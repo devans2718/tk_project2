@@ -1,6 +1,7 @@
 import pickle
-import re
 from copy import copy
+
+import regex
 
 from common import Item
 
@@ -18,7 +19,7 @@ def returns_removed(item):
 def title_and_text_trimmed(item):
     new_title = item.title.replace('Сталин И.В. ', '')
 
-    text_pat = re.compile(
+    text_pat = regex.compile(
         r'(?<=Источник:\n(.*\n){6})(?:.*\n)+?(?=\n{6}|\nПРИМЕЧАНИ[ЕЯ]\n)')
     text_match = text_pat.search(item.text)
     new_text = text_match.group() if text_match is not None else item.text
@@ -27,15 +28,15 @@ def title_and_text_trimmed(item):
 
 
 def page_numbers_removed(item):
-    pat = re.compile(r'\[c\..{,6}\]')
-    new_text = re.sub(pat, r'', item.text)
+    pat = regex.compile(r'\[c\..{,6}\]')
+    new_text = regex.sub(pat, r'', item.text)
 
     return Item(item.title, new_text)
 
 
 def initials_removed(item):
-    pat = re.compile(r'\p{lu}\.\p{lu}\. (?=\w)')
-    new_text = re.sub(pat, r'', item.text)
+    pat = regex.compile(r'\p{lu}\.\p{lu}\. (?=\w)')
+    new_text = regex.sub(pat, r'', item.text)
 
     return Item(item.title, new_text)
 
