@@ -1,9 +1,3 @@
-# what else should be defined here? seems useless
-# to have just one use for common.py
+from collections import namedtuple
 
-import attr # rewrite without attr
-
-@attr.s
-class Item:
-    title = attr.ib()
-    text = attr.ib()
+Item = namedtuple('Item', 'title text url')
