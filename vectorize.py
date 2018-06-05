@@ -20,19 +20,22 @@ def tokenize(text):
     return tokens
 
 
-def train_model(clxn):
-    sents = chain(*(tokenize(item.text) for item in clxn))
-
+def train_model(items):
+    sents = chain(*(tokenize(item.text) for item in items))
     model = FastText(sents, size=300)
 
     return model
 
 
-if __name__ == "__main__":
-    with open('preprocessed_texts.pickle', 'rb') as f:
-        clxn = pickle.load(f)
+def main():
+    with open('preprocessed_items.pickle', 'rb') as f:
+        items = pickle.load(f)
 
-    model = train_model(clxn)
+    model = train_model(items)
 
     with open('trained_model.pickle', 'wb') as g:
         pickle.dump(model, g)
+
+
+if __name__ == '__main__':
+    main()

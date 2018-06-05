@@ -1,79 +1,78 @@
-# this is very disorganized
-
 import pickle
-
-import regex
+import re
+from copy import copy
 
 from common import Item
 
 
-def load_items():
-    for n in range(18):
-        with open(f'raw_tomes/t{n+1}.pickle', 'rb') as f:
-            for v in pickle.load(f).values():
-                yield Item(*v.values())
-
-
 def validate_text(item):
-    pat = regex.compile(r'Источник:\n')
-    search = pat.search(item.text)
-
-    return False if search is None else True
+    return 'Источник:\n' in item.text
 
 
-def remove_returns(item):
-    pat = regex.compile(r'\r')
-    new_text = regex.sub(pat, r'', item.text)
+def returns_removed(item):
+    new_text = item.text.replace('\r', ' ').replace('  ', ' ')
 
     return Item(item.title, new_text)
 
 
-def trim(item):
-    title_pat = regex.compile(r'(?<=Сталин И.В. ).*')
-    title_match = title_pat.search(item.title)
-    new_title = item.title if title_match is None else title_match.group()
+def title_and_text_trimmed(item):
+    new_title = item.title.replace('Сталин И.В. ', '')
 
-    text_pat = regex.compile(
+    text_pat = re.compile(
         r'(?<=Источник:\n(.*\n){6})(?:.*\n)+?(?=\n{6}|\nПРИМЕЧАНИ[ЕЯ]\n)')
     text_match = text_pat.search(item.text)
-    new_text = item.text if text_match is None else text_match.group()
+    new_text = text_match.group() if text_match is not None else item.text
 
     return Item(new_title, new_text)
 
 
-def remove_page_numbers(item):
-    pat = regex.compile(r'\[c\..{,6}\]')
-    new_text = regex.sub(pat, r'', item.text)
+def page_numbers_removed(item):
+    pat = re.compile(r'\[c\..{,6}\]')
+    new_text = re.sub(pat, r'', item.text)
 
     return Item(item.title, new_text)
 
 
-def remove_initials(item):
-    pat = regex.compile(r'\p{lu}\.\p{lu}\. (?=\w)')
-    new_text = regex.sub(pat, r'', item.text)
+def initials_removed(item):
+    pat = re.compile(r'\p{lu}\.\p{lu}\. (?=\w)')
+    new_text = re.sub(pat, r'', item.text)
 
     return Item(item.title, new_text)
 
 
-def remove_newlines(item):
-    new_text = item.text.replace('\n', ' ')
-    new_text = new_text.replace('  ', ' ')
+def newlines_removed(item):
+    new_text = item.text.replace('\n', ' ').replace('  ', ' ')
 
     return Item(item.title, new_text)
 
 
 def preprocess(item):
-    item = remove_returns(item)
-    item = trim(item)
-    item = remove_page_numbers(item)
-    item = remove_initials(item)
-    item = remove_newlines(item)
-    return item
+    funcs = [
+        returns_removed,
+        title_and_text_trimmed,
+        page_numbers_removed,
+        initials_removed,
+        newlines_removed
+    ]
+
+    new_item = copy(item)
+
+    for func in funcs:
+        new_item = func(new_item)
+
+    return new_item
+
+
+def main():
+    with open('raw_items.pickle', 'rb') as f:
+        items = pickle.load(f)
+
+    preprocessed_items = [*map(preprocess, filter(validate_text, items))]
+
+    with open('preprocessed_items.pickle', 'wb') as g:
+        pickle.dump(preprocessed_items, g)
+
 
 
 if __name__ == "__main__":
-    clxn = [preprocess(item) for item in load_items()
-            if validate_text(item)]
-
-    with open('preprocessed_texts.pickle', 'wb') as f:
-        pickle.dump(clxn, f)
+    main()
