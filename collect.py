@@ -2,9 +2,9 @@
 
 from itertools import chain
 import pickle
-import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+import regex
 import requests
 from bs4 import BeautifulSoup
 
@@ -18,7 +18,7 @@ def get_urls(n):
 
     req = requests.get(f'{BASE_URL}/cont_{n}.htm')
     soup = BeautifulSoup(req.content, 'lxml')
-    pat = re.compile(fr't{n}_(\d+).htm')
+    pat = regex.compile(fr't{n}_(\d+).htm')
 
     a_tags = soup.find_all('a')
     hrefs = (a.get('href') for a in a_tags)
@@ -31,13 +31,13 @@ def get_urls(n):
 def get_items(urls):
     """Generate the items found at urls."""
     with ThreadPoolExecutor(20) as executor:
-        futures = [executor.submit(requests.get, url) for url in urls]
+        futures = {executor.submit(requests.get, url): url for url in urls}
 
         for fut in as_completed(futures):
             soup = BeautifulSoup(fut.result().content, 'lxml')
-            title = soup.title.get_text()
-            text = soup.get_text().replace('\xa0', ' ')
-            yield Item(title, text)
+            yield Item(soup.title.get_text(),
+                       soup.get_text().replace('\xa0', ' '),
+                       futures[fut])
 
 
 def main():
