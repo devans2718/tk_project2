@@ -4,7 +4,7 @@
 
 ### Project overview
 
-At University of Missouri - Columbia, I took a course that explored the relationship between totalitarian governments their substrate cultures. The final project was an open-ended assignment where students decided their own topic and format. I decided to run an experiment using word embeddings to explore the sociolinguistic effects of propaganda.
+At University of Missouri - Columbia, I took a course that explored the relationship between totalitarian governments and the cultures under them. The final project was an open-ended assignment where students decided their own topic and format. I decided to run an experiment using word embeddings to explore the sociolinguistic effects of propaganda.
 
 The core idea is that word embeddings derived from vernacular and propagandistic corpora have observable differences. In particular, the set of words with vectors most cosine-similar to the vector of a given word varies between corpora. The vernacular embedding used is provided by [Facebook](fasttext.cc) and was trained on the [Common Crawl](http://commoncrawl.org/) corpus. The propagandistic embedding was trained on the [complete works of Joseph Stalin](http://grachev62.narod.ru/stalin/index.htm).
 
@@ -27,16 +27,23 @@ Below is a description of the main `.py` files in order of execution:
 
 Long words with similar internal structure like *bditel'nyy* 'vigilant' and *reshitel'nyy* 'decisive' have similar embeddings seemingly because they share five derivational morphemes *i-t-el'-n-yy* 'VRB-INF-AG-ADJ-MASC.NOM' despite having roots with different meanings *bd* 'awake' and *resh* 'unravel'.
 
-This is likely a problem with how FastText takes advantage of "sub-word information". It does this by exploding input words into a large array of n-grams. For example, the FastText networks trains on the word "greetings" by training on the following table:
+This is likely a problem with how FastText takes advantage of "sub-word information". FastText does this by exploding input words into a large array of 3-, 4-, and 5-grams. For example, the networks trains on the words "greetings" and "agreement" with each n-gram as a feature of the word:
 
-| whole word | 3-grams | 4-grams | 5-grams |
-| ---        | ---     | ---     | ---     |
-| greetings  | gre     | gree    | greet   |
-|            | ree     | reet    | reeti   |
-|            | eet     | eeti    | eetin   |
-|            | eti     | etin    | eting   |
-|            | tin     | ting    | tings   |
-|            | ing     | ings    |         |
-|            | ngs     |         |         |
+| whole word  |  3-grams  |  4-grams   |  5-grams  |
+|    :---:    |   :---:   |   :---:    |   :---:   |
+| `greetings` | `gre` [1] | `gree` [4] | `greet`   |
+|             | `ree` [2] | `reet`     | `reeti`   |
+|             | `eet`     | `eeti`     | `eetin`   |
+|             | `eti`     | `etin`     | `eting`   |
+|             | `tin`     | `ting`     | `tings`   |
+|             | `ing` [3] | `ings`     |           |
+|             | `ngs`     |            |           |
+|             |           |            |           |
+| `agreeing`  | `agr`     | `agre`     | `agree`   |
+|             | `gre` [1] | `gree` [4] | `greei`   |
+|             | `ree` [2] | `reei`     | `reein`   |
+|             | `eei`     | `eein`     | `eeing`   |
+|             | `ein`     | `eing`     |           |
+|             | `ing` [3] |            |           |
 
-This is certainly a clever approach that works well cross-linguistically, especially with smaller corpora and corpora with misspellings and rare words. Results could be improved by using internal word structure and learning morpheme embeddings (rather than whole-word embeddings). However, parsing morphology can be rather tricky because of nonlinear morphology and allomorphy.
+This is certainly a clever approach that works well cross-linguistically, especially with smaller corpora and corpora with misspellings and rare words. But [1, 2, 3] above are examples of false positives, and [4] is an ambiguous case (between "deverbal adjective" and "deverbal noun"). By parsing internal word structure, an algorithm could learn morpheme-meaning relationships. However, parsing morphology can be quite tricky, especially nonlinear and suprasegmental morphemes.
