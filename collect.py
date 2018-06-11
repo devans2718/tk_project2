@@ -1,4 +1,4 @@
-"""Collect and pickle Stalin's works as a list of Items."""
+"""Collect and pickle Stalin's works as a list of Items"""
 
 from itertools import chain
 import pickle
@@ -12,7 +12,7 @@ from common import Item
 
 
 def get_urls(n):
-    """Generate the urls for each item in tome n."""
+    """Generate the urls for each item in tome n"""
 
     BASE_URL = f'http://grachev62.narod.ru/stalin/t{n}'
 
@@ -29,7 +29,7 @@ def get_urls(n):
 
 
 def get_items(urls):
-    """Generate the items found at urls."""
+    """Generate the items found at urls"""
     with ThreadPoolExecutor(20) as executor:
         futures = {executor.submit(requests.get, url): url for url in urls}
 
